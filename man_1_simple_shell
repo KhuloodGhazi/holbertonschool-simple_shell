@@ -1,0 +1,46 @@
+.TH hsh 1 "April 2025" "Holberton School" "Simple Shell Manual"
+
+.SH NAME
+hsh \- simple UNIX command line interpreter
+
+.SH SYNOPSIS
+.B hsh
+.RI [ command ... ]
+
+.SH DESCRIPTION
+.B hsh
+is a simple shell that reads input from standard input and executes commands.
+
+The shell supports:
+- Executing UNIX commands
+- Searching executable in the PATH
+- Forking and executing child processes
+- Interactive and non-interactive modes
+- Basic error handling
+- Built-in commands: exit
+
+.SH USAGE
+.TP
+.B Interactive mode:
+The user enters commands directly into the shell prompt:
+($) ls -l
+
+
+.TP
+.B Non-interactive mode:
+Commands are passed to the shell via pipe or redirected file:
+echo "ls -l" | ./hsh
+
+.SH RETURN VALUE
+Returns 0 on success or an appropriate error code on failure.
+
+.SH AUTHORS
+Abdullah Alameeri
+Khulood Alotaibi
+Shahad Aljahdali
+
+.SH BUGS
+No known bugs at this time.
+
+.SH SEE ALSO
+sh(1), bash(1), execve(2), fork(2), wait(2)
