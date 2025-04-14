@@ -6,6 +6,34 @@
 #include <sys/wait.h>
 
 /**
+ * trim_spaces - Removes leading and trailing spaces from a string
+ * @str: input string
+ *
+ * Return: pointer to trimmed string
+ */
+char *trim_spaces(char *str)
+{
+char *end;
+
+/* Skip leading spaces */
+while (*str == ' ' || *str == '\t')
+str++;
+
+if (*str == 0)  /* All spaces */
+return (str);
+
+/* Remove trailing spaces */
+end = str + strlen(str) - 1;
+while (end > str && (*end == ' ' || *end == '\t'))
+end--;
+
+/* Null terminate the trimmed string */
+end[1] = '\0';
+
+return (str);
+}
+
+/**
  * prompt_and_read - Displays prompt and reads a line from stdin
  * @line: pointer to buffer
  * @len: pointer to buffer size
@@ -16,15 +44,12 @@ ssize_t prompt_and_read(char **line, size_t *len)
 {
 ssize_t nread;
 
-/* Only show prompt in interactive mode */
 if (isatty(STDIN_FILENO))
 write(STDOUT_FILENO, "#cisfun$ ", 9);
 
-/* Read line from stdin */
 nread = getline(line, len, stdin);
 if (nread == -1)
 {
-/* Handle Ctrl+D (EOF): free memory and exit */
 free(*line);
 if (isatty(STDIN_FILENO))
 write(STDOUT_FILENO, "\n", 1);
@@ -47,29 +72,22 @@ void execute_command(char *line)
 pid_t pid;
 char *argv[2];
 
-/* Create child process */
 pid = fork();
 if (pid == 0)
 {
-/* In child: prepare arguments and execute command */
 argv[0] = line;
 argv[1] = NULL;
 
-/* Execute the command (must be full path) */
 if (execve(argv[0], argv, NULL) == -1)
 perror("./hsh");
-
-/* Exit child if execve fails */
 exit(0);
 }
 else if (pid > 0)
 {
-/* In parent: wait for child process */
 wait(NULL);
 }
 else
 {
-/* Handle fork error */
 perror("fork");
 }
 }
@@ -80,17 +98,17 @@ perror("fork");
  */
 int main(void)
 {
-char *line = NULL;
+char *line = NULL, *cleaned;
 size_t len = 0;
 
-/* Shell loop: keeps running until user exits */
 while (1)
 {
-/* Show prompt and read input */
 prompt_and_read(&line, &len);
+cleaned = trim_spaces(line);
 
-/* Execute the input command */
-execute_command(line);
+/* Skip empty input */
+if (*cleaned != '\0')
+execute_command(cleaned);
 }
 
 free(line);
