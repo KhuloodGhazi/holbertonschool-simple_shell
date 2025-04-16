@@ -13,24 +13,24 @@
  */
 char *trim_spaces(char *str)
 {
-char *end;
+    char *end;
 
-/* Skip leading spaces */
-while (*str == ' ' || *str == '\t')
-str++;
+    /* Skip leading spaces */
+    while (*str == ' ' || *str == '\t')
+        str++;
 
-if (*str == 0)  /* All spaces */
-return (str);
+    if (*str == 0)  /* All spaces */
+        return (str);
 
-/* Remove trailing spaces */
-end = str + strlen(str) - 1;
-while (end > str && (*end == ' ' || *end == '\t'))
-end--;
+    /* Remove trailing spaces */
+    end = str + strlen(str) - 1;
+    while (end > str && (*end == ' ' || *end == '\t'))
+        end--;
 
-/* Null terminate the trimmed string */
-end[1] = '\0';
+    /* Null terminate the trimmed string */
+    end[1] = '\0';
 
-return (str);
+    return (str);
 }
 
 /**
@@ -42,54 +42,66 @@ return (str);
  */
 ssize_t prompt_and_read(char **line, size_t *len)
 {
-ssize_t nread;
+    ssize_t nread;
 
-if (isatty(STDIN_FILENO))
-write(STDOUT_FILENO, "#cisfun$ ", 9);
+    if (isatty(STDIN_FILENO))
+        write(STDOUT_FILENO, "#cisfun$ ", 9);
 
-nread = getline(line, len, stdin);
-if (nread == -1)
-{
-free(*line);
-if (isatty(STDIN_FILENO))
-write(STDOUT_FILENO, "\n", 1);
-exit(0);
-}
+    nread = getline(line, len, stdin);
+    if (nread == -1)
+    {
+        free(*line);
+        if (isatty(STDIN_FILENO))
+            write(STDOUT_FILENO, "\n", 1);
+        exit(0);
+    }
 
-/* Remove trailing newline */
-if ((*line)[nread - 1] == '\n')
-(*line)[nread - 1] = '\0';
+    /* Remove trailing newline */
+    if ((*line)[nread - 1] == '\n')
+        (*line)[nread - 1] = '\0';
 
-return (nread);
+    return (nread);
 }
 
 /**
- * execute_command - Forks and executes the command
- * @line: command to execute
+ * execute_command - Forks and executes the command with arguments
+ * @line: command to execute (may include arguments)
  */
 void execute_command(char *line)
 {
-pid_t pid;
-char *argv[2];
+    pid_t pid;
+    char *argv[64];  /* Enough for basic command and args */
+    char *token;
+    int i = 0;
 
-pid = fork();
-if (pid == 0)
-{
-argv[0] = line;
-argv[1] = NULL;
+    token = strtok(line, " \t");
+    while (token != NULL && i < 63)
+    {
+        argv[i++] = token;
+        token = strtok(NULL, " \t");
+    }
+    argv[i] = NULL;
 
-if (execve(argv[0], argv, NULL) == -1)
-perror("./hsh");
-exit(0);
-}
-else if (pid > 0)
-{
-wait(NULL);
-}
-else
-{
-perror("fork");
-}
+    if (argv[0] == NULL)
+        return;
+
+    pid = fork();
+    if (pid == 0)
+    {
+        if (execve(argv[0], argv, NULL) == -1)
+        {
+            perror("./hsh");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else if (pid > 0)
+    {
+        wait(NULL);
+    }
+    else
+    {
+        perror("fork");
+    }
 }
 
 /**
@@ -98,19 +110,19 @@ perror("fork");
  */
 int main(void)
 {
-char *line = NULL, *cleaned;
-size_t len = 0;
+    char *line = NULL, *cleaned;
+    size_t len = 0;
 
-while (1)
-{
-prompt_and_read(&line, &len);
-cleaned = trim_spaces(line);
+    while (1)
+    {
+        prompt_and_read(&line, &len);
+        cleaned = trim_spaces(line);
 
-/* Skip empty input */
-if (*cleaned != '\0')
-execute_command(cleaned);
-}
+        /* Skip empty input */
+        if (*cleaned != '\0')
+            execute_command(cleaned);
+    }
 
-free(line);
-return (0);
+    free(line);
+    return (0);
 }
