@@ -1,3 +1,5 @@
+TASK 3
+==
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -5,124 +7,112 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#define MAX_ARGS 64
+
 /**
- * trim_spaces - Removes leading and trailing spaces from a string
- * @str: input string
+ * split_line - Splits a line into arguments (tokens)
+ * @line: input command line
  *
- * Return: pointer to trimmed string
+ * Return: NULL-terminated array of strings
  */
-char *trim_spaces(char *str)
+char **split_line(char *line)
 {
-    char *end;
+ char **args = malloc(sizeof(char *) * MAX_ARGS);
+ char *token;
+ int i = 0;
 
-    /* Skip leading spaces */
-    while (*str == ' ' || *str == '\t')
-        str++;
+ if (!args)
+ {
+  perror("malloc");
+  exit(EXIT_FAILURE);
+ }
 
-    if (*str == 0)  /* All spaces */
-        return (str);
+ token = strtok(line, " \t\n");
+ while (token && i < MAX_ARGS - 1)
+ {
+  args[i++] = token;
+  token = strtok(NULL, " \t\n");
+ }
+ args[i] = NULL;
 
-    /* Remove trailing spaces */
-    end = str + strlen(str) - 1;
-    while (end > str && (*end == ' ' || *end == '\t'))
-        end--;
-
-    /* Null terminate the trimmed string */
-    end[1] = '\0';
-
-    return (str);
+ return (args);
 }
 
 /**
- * prompt_and_read - Displays prompt and reads a line from stdin
+ * prompt_and_read - Shows prompt and reads line
  * @line: pointer to buffer
  * @len: pointer to buffer size
  *
- * Return: Number of characters read
+ * Return: number of chars read
  */
 ssize_t prompt_and_read(char **line, size_t *len)
 {
-    ssize_t nread;
+ ssize_t nread;
 
-    if (isatty(STDIN_FILENO))
-        write(STDOUT_FILENO, "#cisfun$ ", 9);
+ if (isatty(STDIN_FILENO))
+  write(STDOUT_FILENO, "#cisfun$ ", 9);
 
-    nread = getline(line, len, stdin);
-    if (nread == -1)
-    {
-        free(*line);
-        if (isatty(STDIN_FILENO))
-            write(STDOUT_FILENO, "\n", 1);
-        exit(0);
-    }
+ nread = getline(line, len, stdin);
+ if (nread == -1)
+ {
+  free(*line);
+  if (isatty(STDIN_FILENO))
+   write(STDOUT_FILENO, "\n", 1);
+  exit(0);
+ }
 
-    /* Remove trailing newline */
-    if ((*line)[nread - 1] == '\n')
-        (*line)[nread - 1] = '\0';
-
-    return (nread);
+ return (nread);
 }
 
 /**
- * execute_command - Forks and executes the command with arguments
- * @line: command to execute (may include arguments)
+ * execute_command - Forks and executes a command with arguments
+ * @args: NULL-terminated array of arguments
  */
-void execute_command(char *line)
+void execute_command(char **args)
 {
-    pid_t pid;
-    char *argv[64];  /* Enough for basic command and args */
-    char *token;
-    int i = 0;
+ pid_t pid;
 
-    token = strtok(line, " \t");
-    while (token != NULL && i < 63)
-    {
-        argv[i++] = token;
-        token = strtok(NULL, " \t");
-    }
-    argv[i] = NULL;
-
-    if (argv[0] == NULL)
-        return;
-
-    pid = fork();
-    if (pid == 0)
-    {
-        if (execve(argv[0], argv, NULL) == -1)
-        {
-            perror("./hsh");
-            exit(EXIT_FAILURE);
-        }
-    }
-    else if (pid > 0)
-    {
-        wait(NULL);
-    }
-    else
-    {
-        perror("fork");
-    }
+ pid = fork();
+ if (pid == 0)
+ {
+  if (execve(args[0], args, NULL) == -1)
+   perror("./hsh");
+  exit(EXIT_FAILURE);
+ }
+ else if (pid > 0)
+ {
+  wait(NULL);
+ }
+ else
+ {
+  perror("fork");
+ }
 }
 
 /**
- * main - Entry point of the shell
+ * main - Entry point
  * Return: Always 0
  */
 int main(void)
 {
-    char *line = NULL, *cleaned;
-    size_t len = 0;
+ char *line = NULL;
+ size_t len = 0;
+ ssize_t nread;
+ char **args;
 
-    while (1)
-    {
-        prompt_and_read(&line, &len);
-        cleaned = trim_spaces(line);
+ while (1)
+ {
+  nread = prompt_and_read(&line, &len);
 
-        /* Skip empty input */
-        if (*cleaned != '\0')
-            execute_command(cleaned);
-    }
+  if (nread > 1) /* skip empty/whitespace lines */
+  {
+   args = split_line(line);
+   if (args[0] != NULL)
+    execute_command(args);
+   free(args);
+  }
+ }
 
-    free(line);
-    return (0);
+ free(line);
+ return (0);
 }
