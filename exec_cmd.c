@@ -56,21 +56,23 @@ return (NULL);
 /**
  * execute_command - Forks and executes a command if it exists.
  * @args: NULL-terminated array of arguments (command and its parameters).
+ *
+ * Return: 0 on success, 127 if command not found or failed to execute.
  */
-void execute_command(char **args)
+int execute_command(char **args)
 {
 pid_t pid;
 int status;
 char *cmd_path;
 
 if (!args || !args[0])
-return;
+return (0);
 
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
 {
 fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
-return;
+return (127);
 }
 
 pid = fork();
@@ -78,7 +80,7 @@ if (pid == -1)
 {
 perror("fork");
 free(cmd_path);
-return;
+return (127);
 }
 
 if (pid == 0)
@@ -96,4 +98,5 @@ wait(&status);
 }
 
 free(cmd_path);
+return (0);
 }

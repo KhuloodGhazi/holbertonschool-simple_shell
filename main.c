@@ -13,10 +13,15 @@
  */
 int main(void)
 {
+int status;
+
 while (1)
 {
-if (handle_input() == -1)
+status = handle_input();
+if (status == -1)
 break;
+if (status == 127)
+exit(127);
 }
 return (0);
 }
@@ -24,7 +29,7 @@ return (0);
 /**
  * handle_input - Reads, processes, and executes user input.
  *
- * Return: 0 on success, -1 on EOF or error.
+ * Return: 0 on success, -1 on EOF or error, 127 if command not found.
  */
 int handle_input(void)
 {
@@ -33,7 +38,7 @@ size_t len = 0;
 ssize_t read;
 char *args[MAX_ARGS];
 char *token;
-int i;
+int i, status;
 
 if (isatty(STDIN_FILENO))
 printf(":) ");
@@ -63,7 +68,7 @@ token = strtok(NULL, " ");
 }
 args[i] = NULL;
 
-execute_command(args);
+status = execute_command(args);
 free(input);
-return (0);
+return (status);
 }

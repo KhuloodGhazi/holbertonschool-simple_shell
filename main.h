@@ -3,7 +3,7 @@
 
 extern char **environ;
 
-void execute_command(char **args);
+int execute_command(char **args);
 int handle_input(void);
 
 #endif /* MAIN_H */
