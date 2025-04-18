@@ -1,125 +1,83 @@
-#include "simpleshell.h"
-
-/*char *fullpath;*/
+#include "shell.h"
 
 /**
- * printerror - prints error
- * @command: command inserted
+ * execute_cmd - Executes a command with path resolution
+ * @args: Argument vector (command and its arguments)
+ * Return: 127 if command not found, 0 otherwise
  */
-
-void printerror(char *const command[])
+int execute_cmd(char **args)
 {
-	fprintf(stderr, "./hsh: 1: %s: not found\n", command[0]);
-	free(*command);
-	exit(127);
+pid_t pid;
+int status;
+char *cmd_path;
+
+if (args[0] == NULL)
+return (0);
+
+if (strcmp(args[0], "exit") == 0)
+exit(0);
+
+/* Built-in: env */
+if (strcmp(args[0], "env") == 0)
+{
+int i = 0;
+while (environ[i])
+printf("%s\n", environ[i++]);
+return (0);
 }
 
-/**
- * _getenv - get environment variable
- * @name: name of environment variable
- * @envp: pointer to environment variables
- * Return: pointer to environment variable
- */
-
-char *_getenv(const char *name, char **envp)
+/* Check if command contains '/' */
+if (strchr(args[0], '/'))
 {
-	char **env, *separator;
-
-	for (env = envp; *env != NULL; env++)
-	{
-		separator = strchr(*env, '=');
-		if (separator != NULL)
-		{
-			if (strncmp(*env, name, separator - *env) == 0)
-			{
-				return (separator + 1);
-			}
-		}
-	}
-	return (NULL);
+if (access(args[0], X_OK) == 0)
+cmd_path = strdup(args[0]);
+else
+{
+fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
+return (127);
+}
+}
+else
+{
+/* No '/', resolve using PATH */
+cmd_path = find_command(args[0]);
+if (cmd_path == NULL)
+{
+fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
+return (127);
+}
 }
 
-/**
- * pathfinder - finds the correct path for given alias
- * @command: given input to check for path
- * @cmd: argument
- * @envp: pointer to environment variables
- * Return: pointer to the string array or NULL if failed
- */
+/* Fork and exec */
+pid = fork();
 
-char **pathfinder(char *cmd, char **command, char **envp)
+if (pid == 0)
 {
-	char *current_path, *temp_path;
-	char *path_tok;
-	size_t arglen = strlen(cmd);
-
-	fullpath = NULL;
-
-	if (strchr(cmd, '/') != NULL && access(cmd, F_OK) == 0)
-	{
-		command[0] = cmd;
-		return (command);
-	}
-
-	path_tok = NULL;
-	current_path = _getenv("PATH", envp);
-	temp_path = strdup(current_path);
-	path_tok = strtok(temp_path, ":");
-
-	while (path_tok)
-	{
-		fullpath = malloc(arglen + strlen(path_tok) + 2);
-		sprintf(fullpath, "%s/%s", path_tok, cmd);
-		if (access(fullpath, F_OK) == 0)
-		{
-			command[0] = fullpath;
-			free(temp_path);
-			return (command);
-		}
-		path_tok = strtok(NULL, ":");
-		free(fullpath);
-	}
-	free(temp_path);
-	return (NULL);
+if (execve(cmd_path, args, environ) == -1)
+{
+fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
+free(cmd_path);
+exit(127);
 }
 
-/**
- * execute - function to execute commands
- * @command: input froom user
- * @envp: enviroment path
- * Return: -1 if failed and 0 if success
- */
-
-int execute(char *const command[], char **envp)
+}
+else if (pid < 0)
 {
-	pid_t id;
-	int status, i;
-	char **temp = pathfinder(command[0], (char **) command, envp);
-
-	if (temp != NULL)
-	{
-		id = fork();
-		if (id < 0)
-		{
-			perror("fork failed");
-			return (-1);
-		} else if (id == 0)
-		{
-			if (_getenv("PATH", envp) == NULL && access(command[0], F_OK) != 0)
-				printerror(command);
-			execve(temp[0], command, envp);
-			for (i = 0; command[i] != NULL; i++)
-				free(command[i]);
-			exit(EXIT_FAILURE);
-		}
-		wait(&status);
-		free(fullpath);
-	} else
-		printerror(command);
-	if (errno == -1)
-	{
-		free(*command);
-		exit(2);
-	}
-	return (0);
+perror("fork");
+}
+else
+{
+if (waitpid(pid, &status, 0) != -1)
+{
+if (WIFEXITED(status))
+{
+int exit_status = WEXITSTATUS(status);
+free(cmd_path);
+return (exit_status);
+}
+}
+free(cmd_path);
+return (2);
+}
+return (0);
 }

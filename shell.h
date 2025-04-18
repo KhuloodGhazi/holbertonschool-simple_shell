@@ -1,19 +1,16 @@
-#ifndef SIMPLE_SHELL
-#define SIMPLE_SHELL
+#ifndef SHELL_H
+#define SHELL_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
-int execute(char *const command[], char **envp);
-int print_env(void);
-char *_getenv(const char *name, char **envp);
-void parse(char command[], char **envp);
+int has_path_env(void);
+char **parse_line(char *line);
+int execute_cmd(char **args);
+extern char **environ;
+char *find_command(char *command);
 
-#endif /* SIMPLE_SHELL */
+#endif
