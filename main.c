@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "main.h"
 
 #define MAX_ARGS 64
@@ -34,7 +35,9 @@ char *args[MAX_ARGS];
 char *token;
 int i;
 
+if (isatty(STDIN_FILENO))
 printf(":) ");
+
 read = getline(&input, &len, stdin);
 if (read == -1)
 {
