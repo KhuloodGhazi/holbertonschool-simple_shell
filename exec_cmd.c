@@ -6,24 +6,32 @@
 #include <sys/wait.h>
 #include "main.h"
 
+
 /**
- * find_command_path - Searches for the full path of a command in the PATH.
+ * find_command_path - Searches for the full path of a command using PATH.
  * @command: The name of the command to search for.
  *
- * Return: A malloc'd string containing the full path if found, or NULL.
- *
- * If command is already executable (e.g., /bin/ls), it is returned as is.
- * Otherwise, this function tokenizes PATH variable & checks each directory.
+ * Return: A malloc'd string with the full path, or NULL if not found.
  */
 char *find_command_path(char *command)
 {
-char *path_env, *path_copy, *dir;
+char *path_env = NULL, *path_copy, *dir;
 char full_path[1024];
+int j = 0;
 
 if (access(command, X_OK) == 0)
 return (strdup(command));
 
-path_env = getenv("PATH");
+while (environ[j])
+{
+if (strncmp(environ[j], "PATH=", 5) == 0)
+{
+path_env = environ[j] + 5;
+break;
+}
+j++;
+}
+
 if (!path_env)
 return (NULL);
 
@@ -49,16 +57,14 @@ return (NULL);
 /**
  * execute_command - Forks and executes a command if it exists.
  * @args: NULL-terminated array of arguments (command and its parameters).
- *
- * This function first searches for the command using find_command_path().
- * If not found, it prints an error and returns.
- * If found, it forks a child process to run execve().
- * The parent waits for the child to finish.
  */
 void execute_command(char **args)
 {
 pid_t pid;
 char *cmd_path;
+
+if (!args || !args[0])
+return;
 
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
