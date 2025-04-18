@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 #include "main.h"
 
-
 /**
  * find_command_path - Searches for the full path of a command using PATH.
  * @command: The name of the command to search for.
@@ -61,6 +60,7 @@ return (NULL);
 void execute_command(char **args)
 {
 pid_t pid;
+int status;
 char *cmd_path;
 
 if (!args || !args[0])
@@ -69,7 +69,7 @@ return;
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
 {
-fprintf(stderr, "%s: command not found\n", args[0]);
+fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
 return;
 }
 
@@ -80,17 +80,19 @@ perror("fork");
 free(cmd_path);
 return;
 }
+
 if (pid == 0)
 {
 if (execve(cmd_path, args, environ) == -1)
 {
-perror("execve");
-exit(EXIT_FAILURE);
+perror("./hsh");
+free(cmd_path);
+exit(127);
 }
 }
 else
 {
-wait(NULL);
+wait(&status);
 }
 
 free(cmd_path);
