@@ -150,19 +150,6 @@ void execute_command(char **args)
 }
 
 /**
- * handle_exit - Handles the exit condition of the shell
- * @args: array of arguments
- */
-void handle_exit(char **args)
-{
-    if (args[0] && strcmp(args[0], "exit") == 0)
-    {
-        free(args);
-        exit(0);
-    }
-}
-
-/**
  * main - Entry point of the shell
  *
  * Return: Always 0
@@ -181,7 +168,6 @@ int main(void)
         if (nread > 1)
         {
             args = split_line(line);
-            handle_exit(args);  // Handle exit condition
             if (args[0] != NULL)
                 execute_command(args);
             free(args);
