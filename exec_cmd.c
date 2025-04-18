@@ -7,7 +7,7 @@
 #include "main.h"
 
 /**
- * search_path_dirs - Searches command in PATH directories.
+ * search_path_dirs - Searches for a command in PATH directories.
  * @path_env: The PATH string (colon-separated).
  * @command: The command to search for.
  *
@@ -38,8 +38,8 @@ return (NULL);
 }
 
 /**
- * find_command_path - Finds full path of a command using PATH.
- * @command: The name of the command.
+ * find_command_path - Finds full path of a command.
+ * @command: The command name.
  *
  * Return: Full path string, or NULL if not found.
  */
@@ -47,6 +47,15 @@ char *find_command_path(char *command)
 {
 int i = 0;
 char *path_env = NULL;
+
+/* Allow absolute and relative paths regardless of PATH */
+if (command[0] == '/' || (command[0] == '.' && command[1] == '/'))
+{
+if (access(command, X_OK) == 0)
+return (strdup(command));
+else
+return (NULL);
+}
 
 while (environ[i])
 {
@@ -59,14 +68,7 @@ i++;
 }
 
 if (!path_env || strlen(path_env) == 0)
-{
-if (command[0] == '/' || (command[0] == '.' && command[1] == '/'))
-{
-if (access(command, X_OK) == 0)
-return (strdup(command));
-}
 return (NULL);
-}
 
 return (search_path_dirs(path_env, command));
 }
