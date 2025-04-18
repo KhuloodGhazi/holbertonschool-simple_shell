@@ -181,7 +181,7 @@ int main(void)
         if (nread > 1)
         {
             args = split_line(line);
-            handle_exit(args);  // Handle exit condition
+            handle_exit(args);  /* Handle exit condition */
             if (args[0] != NULL)
                 execute_command(args);
             free(args);
