@@ -4,10 +4,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "simpleshell.h"
 
 #define MAX_ARGS 64
-
-extern char **environ;
 
 /**
  * split_line - Splits a line into tokens (arguments)
@@ -65,77 +64,19 @@ ssize_t prompt_and_read(char **line, size_t *len)
 }
 
 /**
- * find_command - Searches for the command in the PATH
- * @cmd: the command name
- *
- * Return: full path if found, otherwise NULL
- */
-char *find_command(char *cmd)
-{
-    char *path, *path_copy, *token, *full_path;
-    size_t len;
-
-    if (access(cmd, X_OK) == 0)
-        return strdup(cmd);
-
-    path = getenv("PATH");
-    if (!path)
-        return NULL;
-
-    path_copy = strdup(path);
-    if (!path_copy)
-        return NULL;
-
-    token = strtok(path_copy, ":");
-    while (token)
-    {
-        len = strlen(token) + strlen(cmd) + 2;
-        full_path = malloc(len);
-        if (!full_path)
-        {
-            free(path_copy);
-            return NULL;
-        }
-
-        snprintf(full_path, len, "%s/%s", token, cmd);
-
-        if (access(full_path, X_OK) == 0)
-        {
-            free(path_copy);
-            return full_path;
-        }
-
-        free(full_path);
-        token = strtok(NULL, ":");
-    }
-
-    free(path_copy);
-    return NULL;
-}
-
-/**
  * execute_command - Forks and executes the command
  * @args: array of arguments
  */
 void execute_command(char **args)
 {
     pid_t pid;
-    char *cmd_path = find_command(args[0]);
-
-    if (!cmd_path)
-    {
-        fprintf(stderr, "./hsh: command not found: %s\n", args[0]);
-        return;
-    }
 
     pid = fork();
     if (pid == 0)
     {
-        if (execve(cmd_path, args, environ) == -1)
-        {
+        if (execve(args[0], args, NULL) == -1)
             perror("./hsh");
-            exit(EXIT_FAILURE);
-        }
+        exit(EXIT_FAILURE);
     }
     else if (pid > 0)
     {
@@ -145,8 +86,79 @@ void execute_command(char **args)
     {
         perror("fork");
     }
+}
 
-    free(cmd_path);
+/**
+ * print_env - prints the environment
+ * Return: zero
+ */
+int print_env(void)
+{
+    int i = 0;
+
+    if (env == NULL)
+        return (-1);
+    while (env[i])
+    {
+        printf("%s\n", env[i++]);
+    }
+    return (0);
+}
+
+/**
+ * parse - tokenizes
+ * @command: command from the user
+ * @envp: enviroment path
+ */
+void parse(char command[], char **envp)
+{
+    char *arguments[11];
+    char *token = strtok(command, " ");
+    int arg_count = 0;
+
+    while (token != NULL && arg_count < 10)
+    {
+        arguments[arg_count++] = token;
+        token = strtok(NULL, " ");
+    }
+    if (arg_count > 11)
+    {
+        perror("Error: Too many arguments");
+        return;
+    }
+    arguments[arg_count] = NULL;
+    if (arg_count > 0)
+    {
+        if (envp != NULL)
+            execute(arguments, envp);
+        else
+        {
+            fprintf(stderr, "./hsh: 1: %s: not found\n", arguments[0]);
+            exit(127);
+        }
+    }
+}
+
+/**
+ * input - function to keep prompting user until exit
+ * @command: argument to process
+ * @size: size of argument
+ */
+void input(char **command, size_t *size)
+{
+    size_t read_bytes;
+
+    read_bytes = getline(command, size, stdin);
+    if ((int) read_bytes == EOF)
+    {
+        if (isatty(STDIN_FILENO) != 0)
+            printf("\n");
+        if (*command != NULL)
+            free(*command);
+        exit(EXIT_SUCCESS);
+    }
+    if ((*command)[read_bytes - 1] == '\n')
+        (*command)[read_bytes - 1] = '\0';
 }
 
 /**
