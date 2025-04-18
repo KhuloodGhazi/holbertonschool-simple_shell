@@ -7,32 +7,16 @@
 #include "main.h"
 
 /**
- * find_command_path - Searches for the full path of a command using PATH.
- * @command: The name of the command to search for.
+ * search_path_dirs - Searches command in PATH directories.
+ * @path_env: The PATH string (colon-separated).
+ * @command: The command to search for.
  *
- * Return: A malloc'd string with the full path, or NULL if not found.
+ * Return: Full path if found, NULL otherwise.
  */
-char *find_command_path(char *command)
+char *search_path_dirs(char *path_env, char *command)
 {
-char *path_env = NULL, *path_copy, *dir;
+char *path_copy, *dir;
 char full_path[1024];
-int j = 0;
-
-if (access(command, X_OK) == 0)
-return (strdup(command));
-
-while (environ[j])
-{
-if (strncmp(environ[j], "PATH=", 5) == 0)
-{
-path_env = environ[j] + 5;
-break;
-}
-j++;
-}
-
-if (!path_env || strlen(path_env) == 0)
-return (NULL);
 
 path_copy = strdup(path_env);
 if (!path_copy)
@@ -54,10 +38,44 @@ return (NULL);
 }
 
 /**
- * execute_command - Forks and executes a command if it exists.
- * @args: NULL-terminated array of arguments (command and its parameters).
+ * find_command_path - Finds full path of a command using PATH.
+ * @command: The name of the command.
  *
- * Return: 0 on success, 127 if command not found or failed to execute.
+ * Return: Full path string, or NULL if not found.
+ */
+char *find_command_path(char *command)
+{
+int i = 0;
+char *path_env = NULL;
+
+while (environ[i])
+{
+if (strncmp(environ[i], "PATH=", 5) == 0)
+{
+path_env = environ[i] + 5;
+break;
+}
+i++;
+}
+
+if (!path_env || strlen(path_env) == 0)
+{
+if (command[0] == '/' || (command[0] == '.' && command[1] == '/'))
+{
+if (access(command, X_OK) == 0)
+return (strdup(command));
+}
+return (NULL);
+}
+
+return (search_path_dirs(path_env, command));
+}
+
+/**
+ * execute_command - Forks and executes a command if it exists.
+ * @args: NULL-terminated array of command arguments.
+ *
+ * Return: 0 on success, 127 if command not found or error.
  */
 int execute_command(char **args)
 {
