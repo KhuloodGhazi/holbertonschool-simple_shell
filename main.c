@@ -1,193 +1,132 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include "simpleshell.h"
 
-#define MAX_ARGS 64
-
-extern char **environ;
+/*char **env, *command;*/
 
 /**
- * split_line - Splits a line into tokens (arguments)
- * @line: the input line
- *
- * Return: an array of strings (arguments)
+ * print_env - prints the environment
+ * Return: zero
  */
-char **split_line(char *line)
+
+int print_env(void)
 {
-    char **args = malloc(sizeof(char *) * MAX_ARGS);
-    char *token;
-    int i = 0;
+	int i = 0;
 
-    if (!args)
-    {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-
-    token = strtok(line, " \t\n");
-    while (token && i < MAX_ARGS - 1)
-    {
-        args[i++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    args[i] = NULL;
-
-    return (args);
+	if (env == NULL)
+		return (-1);
+	while (env[i])
+	{
+		printf("%s\n", env[i++]);
+	}
+	return (0);
 }
 
 /**
- * prompt_and_read - Displays prompt and reads input line
- * @line: pointer to buffer to fill
- * @len: pointer to size of buffer
- *
- * Return: number of characters read
+ * parse - tokenizes
+ * @command: command from the user
+ * @envp: enviroment path
  */
-ssize_t prompt_and_read(char **line, size_t *len)
+
+void parse(char command[], char **envp)
 {
-    ssize_t nread;
+	char *arguments[11];
+	char *token = strtok(command, " ");
+	int arg_count = 0;
 
-    if (isatty(STDIN_FILENO))
-        write(STDOUT_FILENO, "#cisfun$ ", 9);
 
-    nread = getline(line, len, stdin);
-    if (nread == -1)
-    {
-        free(*line);
-        if (isatty(STDIN_FILENO))
-            write(STDOUT_FILENO, "\n", 1);
-        exit(0);
-    }
-
-    return (nread);
+	while (token != NULL && arg_count < 10)
+	{
+		arguments[arg_count++] = token;
+		token = strtok(NULL, " ");
+	}
+	if (arg_count > 11)
+	{
+		perror("Error: Too many arguments");
+		return;
+	}
+	arguments[arg_count] = NULL;
+	if (arg_count > 0)
+	{
+		if (envp != NULL)
+			execute(arguments, envp);
+		else
+		{
+			fprintf(stderr, "./hsh: 1: %s: not found\n", arguments[0]);
+			exit(127);
+		}
+	}
 }
 
 /**
- * find_command - Searches for the command in the PATH
- * @cmd: the command name
- *
- * Return: full path if found, otherwise NULL
+ * input - function to keep prompting user until exit
+ * @command: argument to process
+ * @size: size of argument
  */
-char *find_command(char *cmd)
+
+void input(char **command, size_t *size)
 {
-    char *path, *path_copy, *token, *full_path;
-    size_t len;
+	size_t read_bytes;
 
-    if (access(cmd, X_OK) == 0)
-        return strdup(cmd);
-
-    path = getenv("PATH");
-    if (!path)
-        return NULL;
-
-    path_copy = strdup(path);
-    if (!path_copy)
-        return NULL;
-
-    token = strtok(path_copy, ":");
-    while (token)
-    {
-        len = strlen(token) + strlen(cmd) + 2;
-        full_path = malloc(len);
-        if (!full_path)
-        {
-            free(path_copy);
-            return NULL;
-        }
-
-        snprintf(full_path, len, "%s/%s", token, cmd);
-
-        if (access(full_path, X_OK) == 0)
-        {
-            free(path_copy);
-            return full_path;
-        }
-
-        free(full_path);
-        token = strtok(NULL, ":");
-    }
-
-    free(path_copy);
-    return NULL;
+	read_bytes = getline(command, size, stdin);
+	if ((int) read_bytes == EOF)
+	{
+		if (isatty(STDIN_FILENO) != 0)
+			printf("\n");
+		if (*command != NULL)
+			free(*command);
+		exit(EXIT_SUCCESS);
+	}
+	if ((*command)[read_bytes - 1] == '\n')
+		(*command)[read_bytes - 1] = '\0';
 }
 
 /**
- * execute_command - Forks and executes the command
- * @args: array of arguments
+ * main - Shell, interactive or non interactive
+ * @argc: argument count
+ * @argv: argument vector
+ * @envp: environmental variable
+ * Return: 1 if command fails
  */
-void execute_command(char **args)
+
+int main(int argc, char *argv[], char **envp)
 {
-    pid_t pid;
-    char *cmd_path = find_command(args[0]);
+	size_t size;
 
-    if (!cmd_path)
-    {
-        fprintf(stderr, "./hsh: command not found: %s\n", args[0]);
-        return;
-    }
-
-    pid = fork();
-    if (pid == 0)
-    {
-        if (execve(cmd_path, args, environ) == -1)
-        {
-            perror("./hsh");
-            exit(EXIT_FAILURE);
-        }
-    }
-    else if (pid > 0)
-    {
-        wait(NULL);
-    }
-    else
-    {
-        perror("fork");
-    }
-
-    free(cmd_path);
-}
-
-/**
- * handle_exit - Handles the exit condition of the shell
- * @args: array of arguments
- */
-void handle_exit(char **args)
-{
-    if (args[0] && strcmp(args[0], "exit") == 0)
-    {
-        free(args);
-        exit(0);
-    }
-}
-
-/**
- * main - Entry point of the shell
- *
- * Return: Always 0
- */
-int main(void)
-{
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    char **args;
-
-    while (1)
-    {
-        nread = prompt_and_read(&line, &len);
-
-        if (nread > 1)
-        {
-            args = split_line(line);
-            handle_exit(args);  /* Handle exit condition */
-            if (args[0] != NULL)
-                execute_command(args);
-            free(args);
-        }
-    }
-
-    free(line);
-    return (0);
+	env = envp;
+	command = NULL;
+	(void) argv;
+	if (argc > 1)
+	{
+		printf("./shell: command does not exist\n");
+		exit(EXIT_FAILURE);
+	}
+	while (1)
+	{
+		size = 0;
+		if (isatty(STDIN_FILENO))
+			printf("($) ");
+		input(&command, &size);
+		if (strcmp(command, "exit") == 0)
+		{
+			free(command);
+			exit(EXIT_SUCCESS);
+		}
+		if (strcmp(command, "env") == 0)
+		{
+			print_env();
+			free(command);
+			exit(EXIT_SUCCESS);
+		}
+		if (_getenv("PATH", envp) == NULL)
+		{
+			if (command[0] != '/')
+			{
+				fprintf(stderr, "./hsh: 1: %s: not found\n", command);
+				free(command);
+				exit(127);
+			}
+		}
+		parse(command, envp);
+		free(command);
+	}
+	return (0);
 }
