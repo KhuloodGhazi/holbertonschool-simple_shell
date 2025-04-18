@@ -31,7 +31,7 @@ break;
 j++;
 }
 
-if (!path_env)
+if (!path_env || strlen(path_env) == 0)
 return (NULL);
 
 path_copy = strdup(path_env);
