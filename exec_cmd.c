@@ -38,7 +38,7 @@ return (NULL);
 }
 
 /**
- * find_command_path - Finds full path of a command.
+ * find_command_path - Finds the full path of a command.
  * @command: The command name.
  *
  * Return: Full path string, or NULL if not found.
@@ -48,8 +48,10 @@ char *find_command_path(char *command)
 int i = 0;
 char *path_env = NULL;
 
-/* Allow absolute and relative paths regardless of PATH */
-if (command[0] == '/' || (command[0] == '.' && command[1] == '/'))
+/* Allow absolute and relative paths like ./cmd or ../cmd */
+if (command[0] == '/' ||
+strncmp(command, "./", 2) == 0 ||
+strncmp(command, "../", 3) == 0)
 {
 if (access(command, X_OK) == 0)
 return (strdup(command));
