@@ -1,12 +1,33 @@
-# Simple Shell - "hsh"
-A simple UNIX command-line interpreter written in C, as part of the Holberton School Low-Level Programming curriculum.
+# hsh - Simple Shell
 
-===
+![C](https://img.shields.io/badge/language-C-00599C?logo=c)
+![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen)
+
+> This Holberton School Low-Level Programming Project (C, Unix)
+> A small UNIX command-line interpreter written in ANSI C. hsh supports both interactive and n-interactive modes, executes programs found in the system PATH, and provides a growing set of built-in commands
+
+---
+
+## ✨ Features
+
+| Category            | Details |
+|---------------------|---------|
+| **Execution**       | Forks a child with `fork()`, replaces image with `execve()`; parent waits with `waitpid()` and propagates exit status |
+| **Path resolution** | Searches each directory in `$PATH`; absolute/relative paths exec directly |
+| **Built‑ins**       | `exit` → quit shell&nbsp;· `env` → print environment variab
+| **Modes**           | Interactive prompt `:) ` and non‑interactive (stdin) 
+| **Error handling**  | Clear messages, proper exit codes (`127` cmd not found, child exit status, etc.) |
+
+---
+
+## 🔧 Requirements
+
+```bash
+gcc -Wall -Wextra -Werror -pedantic -std=gnu89 *.c -o hsh
 
 Project Description:
 This project replicates the basic behavior of a UNIX shell.
-It reads commands from standard input, parses them, and executes them using system calls such as "fork", "execve", and "wait".
-
+It reads commands from standard input, pars
 ===
 
 Features"
@@ -24,37 +45,3 @@ The shell is compiled using the following command:
 gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh
 
 ===
-
-Usage:
----- Interactive mode
-./hsh
-($) ls -l
-($) exit
----- Non-interactive mode
-./hsh
-($) ls -l
-($) exit
-
-===
-
-Learning Objectives:
-- How a shell works internally
-- Process creation using fork and execution with execve
-- Use of PATH and environment variables
-- Parsing user input and tokenizing commands
-- Memory handling and avoiding leaks
-- Writing portable and maintainable C code
-
-===
-
-Authors:
-- Abdullah Alameeri
-- Khulood Alotaibi
-- Shahad Aljahdali
-See the full contributors in the AUTHORS file.
-
-
-===
-
-Man Page:
-Run man ./man_1_simple_shell for usage documentation.
