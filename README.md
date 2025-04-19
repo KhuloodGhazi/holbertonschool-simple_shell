@@ -1,7 +1,6 @@
 # hsh - Simple Shell
 
 ![C](https://img.shields.io/badge/language-C-00599C?logo=c)
-![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen)
 
 ### This Holberton School Low-Level Programming Project (C, Unix)
 > A small UNIX command-line interpreter written in ANSI C. hsh supports both interactive and n-interactive modes, executes programs found in the system PATH, and provides a growing set of built-in commands
