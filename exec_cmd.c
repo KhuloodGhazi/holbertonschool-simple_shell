@@ -90,6 +90,9 @@ char *cmd_path;
 if (!args || !args[0])
 return (0);
 
+if (strcmp(args[0], "exit") == 0)
+return (-1);
+
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
 {
