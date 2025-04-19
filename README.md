@@ -38,15 +38,19 @@
 ## 💻 Usage
 
 ### Interactive
+```console
 $ ./hsh
 :) ls -l /tmp
 total 0
 :) exit
 $
-
+```
 ### Non‑interactive
-echo "/bin/echo Holberton" | ./hsh
+```console
+$ echo "/bin/echo Holberton" | ./hsh
 Holberton
+$
+```
 
 ---
 
@@ -61,7 +65,7 @@ Holberton
 
 ---
 
-## 🗂️ File Overv
+## 🗂️ File Overview
 
 | File               | Purpose                                                     |
 |--------------------|-------------------------------------------------------------|
@@ -74,10 +78,10 @@ Holberton
 
 ---
 
-## 🧑‍💻 Au
+## 🧑‍💻 Authors
 
 * [Abdullah Alameeri](https://github.com/ab10680) – 10680@holbertonstudents.com  
 * [Khulood AlOtaibi](https://github.com/KhuloodGhazi) – 10689@holbertonstudents.com  
 * [Shahad Aljahdali](https://github.com/shahadFawaz99) – 10707@holbertonstudents.com  
 
-See `AUTHORS` for a full, auto‑generated list.
+See `AUTHORS` for a full list.
