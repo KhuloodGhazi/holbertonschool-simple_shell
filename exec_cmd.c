@@ -93,6 +93,14 @@ return (0);
 if (strcmp(args[0], "exit") == 0)
 return (-1);
 
+if (strcmp(args[0], "env") == 0)
+{
+int i;
+for (i = 0; environ[i]; i++)
+puts(environ[i]);
+return(0);
+}
+
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
 {
