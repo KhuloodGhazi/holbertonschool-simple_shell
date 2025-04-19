@@ -119,9 +119,14 @@ exit(127);
 }
 else
 {
-wait(&status);
-}
-
+waitpid(pid, &status, 0);
 free(cmd_path);
+
+if (WIFEXITED(status))
+return (WEXITSTATUS(status));
+
+else
+return (2);
+}
 return (0);
 }

@@ -13,7 +13,7 @@
  */
 int main(void)
 {
-int status;
+int status, last_status = 0;
 
 while (1)
 {
@@ -22,8 +22,9 @@ if (status == -1)
 break;
 if (status == 127)
 exit(127);
+last_status = status;
 }
-return (0);
+return (last_status);
 }
 
 /**
