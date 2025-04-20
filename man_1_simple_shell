@@ -1,46 +1,93 @@
-.TH hsh 1 "April 2025" "Holberton School" "Simple Shell Manual"
+.TH HSH 1 "April 2025" "0.2" "Holberton Simple Shell Manual"
 
 .SH NAME
-hsh \- simple UNIX command line interpreter
+hsh \- A basic UNIX command line interpreter
 
 .SH SYNOPSIS
 .B hsh
-.RI [ command ... ]
+[\fIcommand\fR]
 
 .SH DESCRIPTION
 .B hsh
-is a simple shell that reads input from standard input and executes commands.
+is a simple shell developed for the Holberton School project. It functions as a basic command-line interpreter that reads input from standard input or a file, processes commands, and executes them.
 
-The shell supports:
-- Executing UNIX commands
-- Searching executable in the PATH
-- Forking and executing child processes
-- Interactive and non-interactive modes
-- Basic error handling
-- Built-in commands: exit
+The shell supports executing commands with arguments, managing environment variables, and handling built-in commands such as
+.B exit
+and
+.B env.
 
-.SH USAGE
+.SH FUNCTIONALITY
 .TP
-.B Interactive mode:
-The user enters commands directly into the shell prompt:
-($) ls -l
+• Displays a prompt and waits for user input.
+.TP
+• Executes commands either by their full path or by searching for them in the PATH environment variable.
+.TP
+• Handles commands with arguments and pipes.
+.TP
+• Exits the shell using the
+.B exit
+command or Ctrl+D (EOF).
+.TP
+• Displays environment variables with the
+.B env
+command.
+.TP
+• Handles both interactive and non-interactive modes.
+.TP
+• Forks and executes child processes for command execution.
+.TP
+• Provides error messages consistent with the standard `/bin/sh`.
 
+.SH BUILT-IN COMMANDS
+.TP
+.B exit [status]
+Exit the shell with an optional status code.
 
 .TP
-.B Non-interactive mode:
-Commands are passed to the shell via pipe or redirected file:
-echo "ls -l" | ./hsh
+.B env
+Prints the current environment variables.
 
-.SH RETURN VALUE
-Returns 0 on success or an appropriate error code on failure.
+.SH MAIN LOOP
+The shell operates with a continuous loop where it waits for user input, processes the command, and executes it. If the command is not found, an error message is displayed. The shell handles input with the following steps:
+1. Reads input from the user or a file.
+2. Parses the input into arguments.
+3. Executes the command via a forked process.
+4. Exits or continues based on the input.
+
+.TP
+To start the shell, simply run:
+.B
+./hsh
+
+Then, enter a command like:
+.B
+ls -l /tmp
+
+You can also pipe or redirect commands:
+.B
+echo "ls" | ./hsh
+
+.SH FILES
+.TP
+.I shell.h
+Header file containing function prototypes, macros, and external variables used by the shell, such as:
+  - `environ`: A global variable representing the environment of the current process.
+  - Function prototypes for core operations: `execute_command()`, `handle_input()`, and `find_command_path()`.
+
+.TP
+.I exec_cmd.c
+Contains functions for executing commands, finding the command path, and handling the execution process, including `search_path_dirs()`, `find_command_path()`, and `execute_command()`.
+
+.TP
+.I main.c
+Contains the shell's main loop and input handling, including functions like `handle_input()` for reading, parsing, and executing commands.
 
 .SH AUTHORS
+Khulood AlOtaibi  
 Abdullah Alameeri
-Khulood Alotaibi
 Shahad Aljahdali
 
-.SH BUGS
-No known bugs at this time.
-
 .SH SEE ALSO
-sh(1), bash(1), execve(2), fork(2), wait(2)
+.BR sh(1),
+.BR bash(1),
+.BR execve(2)
