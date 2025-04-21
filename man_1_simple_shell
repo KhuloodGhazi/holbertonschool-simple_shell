@@ -1,11 +1,11 @@
 .TH HSH 1 "April 2025" "0.2" "Holberton Simple Shell Manual"
 
 .SH NAME
-hsh \- A basic UNIX command line interpreter
+hsh \- simple UNIX command line interpreter
 
 .SH SYNOPSIS
 .B hsh
-[\fIcommand\fR]
+[\fIcommand\fR ...]
 
 .SH DESCRIPTION
 .B hsh
@@ -18,25 +18,25 @@ and
 
 .SH FUNCTIONALITY
 .TP
-• Displays a prompt and waits for user input.
+Displays a prompt and waits for user input.
 .TP
-• Executes commands either by their full path or by searching for them in the PATH environment variable.
+Executes commands either by their full path or by searching for them in the PATH environment variable.
 .TP
-• Handles commands with arguments and pipes.
+Handles commands with arguments and pipes.
 .TP
-• Exits the shell using the
+Exits the shell using the
 .B exit
 command or Ctrl+D (EOF).
 .TP
-• Displays environment variables with the
+Displays environment variables with the
 .B env
 command.
 .TP
-• Handles both interactive and non-interactive modes.
+Handles both interactive and non-interactive modes.
 .TP
-• Forks and executes child processes for command execution.
+Forks and executes child processes for command execution.
 .TP
-• Provides error messages consistent with the standard `/bin/sh`.
+Provides error messages consistent with the standard `/bin/sh`.
 
 .SH BUILT-IN COMMANDS
 .TP
@@ -71,8 +71,8 @@ echo "ls" | ./hsh
 .TP
 .I shell.h
 Header file containing function prototypes, macros, and external variables used by the shell, such as:
-  - `environ`: A global variable representing the environment of the current process.
-  - Function prototypes for core operations: `execute_command()`, `handle_input()`, and `find_command_path()`.
+  .B environ: A global variable representing the environment of the current process.
+  .B Function prototypes for core operations: `execute_command()`, `handle_input()`, and `find_command_path()`.
 
 .TP
 .I exec_cmd.c
@@ -83,11 +83,15 @@ Contains functions for executing commands, finding the command path, and handlin
 Contains the shell's main loop and input handling, including functions like `handle_input()` for reading, parsing, and executing commands.
 
 .SH AUTHORS
-Khulood AlOtaibi  
+Written by:
+.TP
+Khulood AlOtaibi
+.TP
 Abdullah Alameeri
+.TP
 Shahad Aljahdali
 
 .SH SEE ALSO
-.BR sh(1),
-.BR bash(1),
-.BR execve(2)
+.BR sh (1),
+.BR bash (1),
+.BR execve (2)
