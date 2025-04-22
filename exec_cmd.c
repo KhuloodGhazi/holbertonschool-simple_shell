@@ -83,24 +83,18 @@ return (search_path_dirs(path_env, command));
  */
 int execute_command(char **args)
 {
-pid_t pid;
-int status;
 char *cmd_path;
+int rc;
 
 if (!args || !args[0])
 return (0);
 
-if (strcmp(args[0], "exit") == 0)
-return (-1);
+/* Try built‑ins */
+rc = handle_builtins(args);
+if (rc != -2)
+return (rc);
 
-if (strcmp(args[0], "env") == 0)
-{
-int i;
-for (i = 0; environ[i]; i++)
-puts(environ[i]);
-return(0);
-}
-
+/* Locate in PATH */
 cmd_path = find_command_path(args[0]);
 if (!cmd_path)
 {
@@ -108,33 +102,8 @@ fprintf(stderr, "./hsh: 1: %s: not found\n", args[0]);
 return (127);
 }
 
-pid = fork();
-if (pid == -1)
-{
-perror("fork");
+/* Fork/exec and collect exit code */
+rc = launch_external(cmd_path, args);
 free(cmd_path);
-return (127);
-}
-
-if (pid == 0)
-{
-if (execve(cmd_path, args, environ) == -1)
-{
-perror("./hsh");
-free(cmd_path);
-exit(127);
-}
-}
-else
-{
-waitpid(pid, &status, 0);
-free(cmd_path);
-
-if (WIFEXITED(status))
-return (WEXITSTATUS(status));
-
-else
-return (2);
-}
-return (0);
+return (rc);
 }
