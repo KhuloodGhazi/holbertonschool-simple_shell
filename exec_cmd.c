@@ -76,6 +76,57 @@ return (search_path_dirs(path_env, command));
 }
 
 /**
+ * handle_builtins - detect and run built‑in commands (exit, env)
+ * @args: NULL‑terminated argv array
+ * Return: -1 for “exit”, 0 for “env”, or -2 if not a builtin
+ */
+static int handle_builtins(char **args)
+{
+int i;
+if (strcmp(args[0], "exit") == 0)
+return (-1);
+
+if (strcmp(args[0], "env") == 0)
+{
+for (i = 0; environ[i]; i++)
+puts(environ[i]);
+return (0);
+}
+return (-2);
+}
+
+/**
+ * launch_external - fork, execve a binary, and wait for it
+ * @path: full path to executable
+ * @args: NULL‑terminated argv array
+ * Return: child's exit code or 127 on failure
+ */
+static int launch_external(char *path, char **args)
+{
+pid_t pid;
+int status;
+
+pid = fork();
+if (pid == -1)
+{
+perror("fork");
+return (127);
+}
+
+if (pid == 0)
+{
+execve(path, args, environ);
+perror("./hsh");
+exit(127);
+}
+
+waitpid(pid, &status, 0);
+if (WIFEXITED(status))
+return (WEXITSTATUS(status));
+return (2);
+}
+
+/**
  * execute_command - Forks and executes a command if it exists.
  * @args: NULL-terminated array of command arguments.
  *
@@ -89,7 +140,7 @@ int rc;
 if (!args || !args[0])
 return (0);
 
-/* Try built‑ins */
+/* Try builins */
 rc = handle_builtins(args);
 if (rc != -2)
 return (rc);
